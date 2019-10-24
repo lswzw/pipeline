@@ -1,0 +1,25 @@
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: busybox
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: busybox
+  strategy:
+  #动态更新配置
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: busybox
+    spec:
+      containers:
+      - image: 192.168.6.190/test/busybox:v2.8
+        imagePullPolicy: IfNotPresent
+        name: busybox

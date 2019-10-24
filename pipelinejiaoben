@@ -1,0 +1,45 @@
+pipeline {
+    agent {
+        node {
+            label 'jnlp-agent'
+        }
+    }
+	
+//定义git hook 信息   
+    triggers {
+        GenericTrigger(
+            genericVariables: [
+              [key: 'ref', value: '$.ref']
+            ],
+            regexpFilterText: '$ref',
+            regexpFilterExpression: '^(refs/heads/master)$',
+			//定义master分支提交时会触发.其它分支不触发.
+        )
+    }
+	
+//具体执行步骤	
+    stages {
+        stage ('Git阶段') {
+			steps {
+				git 'http://192.168.6.189/test/app.git'
+			}
+        }
+		stage ('docker阶段') {
+            steps {
+				container('docker') {
+				    sh "sh docker.sh"
+                //sh "docker build -t 192.168.6.190/test/busybox:$TAG . "
+               // sh "docker push 192.168.6.190/test/busybox:$TAG"
+                }
+            }
+        }
+		stage('kubectl 阶段'){
+			steps {
+               sh "cp ./kube ~/.kube -r"
+               sh "ls ~/.kube"
+               sh "cp kubectl /bin/"
+               sh "kubectl apply -n default -f deploy.yaml"
+            }
+		}
+    }
+}
